@@ -1,0 +1,8 @@
+- id: spdx-license-checker
+  name: Check SPDX Licenses
+  description: Ensure all committed files contain the specified SPDX license header.
+  entry: validate-filename
+  language: python
+  types: [text]
+  args: 
+    - '--license=Apache-2.0 WITH LLVM-exception'

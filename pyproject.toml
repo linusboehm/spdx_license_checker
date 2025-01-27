@@ -1,0 +1,31 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools", "setuptools-scm"]
+
+[project]
+name = "spdx-license-checker"
+description = "Pre-commit hook to check spdx license headers."
+readme = "README.md"
+keywords = ["spdx license validation", "pre-commit"]
+# license = {file = "LICENSE"}
+authors = [
+  {name = "Linus Boehm", email = "linusboehm@gmail.com"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python"
+]
+version = "0.0.1"
+
+requires-python = ">=3.8"
+dependencies = ["pygments"]
+optional-dependencies.dev = ["pre-commit", "pytest"]
+
+scripts.validate-filename = "hooks.spdx_license_checker:main"
+
+[project.urls]
+Homepage = "https://github.com/linusboehm/spdx_license_checker"
+Documentation = "https://github.com/linusboehm/spdx_license_checker"
+
+[tool.setuptools.packages.find]
+where = ["scripts"]
