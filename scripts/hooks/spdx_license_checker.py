@@ -1,38 +1,42 @@
 import argparse
 import re
 from pathlib import Path
+from typing import Tuple
 
 from pygments.lexers import guess_lexer_for_filename
 from pygments.util import ClassNotFound
 
 
-def get_spdx_license_regex(pattern):
+def get_spdx_license_regex(file_path: Path, pattern: str) -> str:
     """Return a regex pattern to match SPDX license header."""
-    if not pattern:
-        return r"SPDX-License-Identifier:.*"
-    return rf"SPDX-License-Identifier:\s*{re.escape(pattern)}"
+    spdx_matcher = (
+        r"SPDX-License-Identifier:.*"
+        if not pattern
+        else rf"SPDX-License-Identifier:\s*{re.escape(pattern)}"
+    )
+    comment_prefix = get_comment_style(file_path)[0]
+    comment_prefix = comment_prefix.split("\n")[-1]  # don't match across lines
+    return f"{comment_prefix}\\s*{spdx_matcher}".replace("\n", ".")
 
 
-def get_comment_style(file_path: Path):
+def get_comment_style(file_path: Path) -> Tuple[str, str]:
     """Determine the comment style for a given file based on its type."""
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read()
         lexer = guess_lexer_for_filename(file_path.name, content)
     except (OSError, UnicodeDecodeError, ClassNotFound):
-        print("hello")
         return "#", ""  # Default to hash-style comments
 
     # Return single-line comment style for the lexer
     if hasattr(lexer, "inline_comment_prefixes"):
         return lexer.inline_comment_prefixes[0], ""
     if file_path.suffix == ".md":
-        print("ble")
         return "<!--\n", "\n-->"
     return "#", ""
 
 
-def add_spdx_header(file_path, spdx_id):
+def add_spdx_header(file_path: Path, spdx_id: str) -> None:
     """Add SPDX license header to the file."""
     try:
         comment_prefix, comment_suffix = get_comment_style(file_path)
@@ -55,16 +59,12 @@ def add_spdx_header(file_path, spdx_id):
         pass
 
 
-def check_spdx_header(file_path, spdx_id, exact_match):
+def check_spdx_header(file_path: Path, spdx_id: str, exact_match: str) -> bool:
     """Check if a file contains the SPDX license header."""
-    spdx_regex = get_spdx_license_regex(spdx_id if exact_match else "")
+    spdx_regex = get_spdx_license_regex(file_path, spdx_id if exact_match else "")
     try:
         with open(file_path, "r", encoding="utf-8") as file:
-            cnt = 0
             for line in file:
-                cnt += 1
-                if cnt > 10:
-                    break
                 if re.search(spdx_regex, line):
                     return True
         add_spdx_header(file_path, spdx_id)
